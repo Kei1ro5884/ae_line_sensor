@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<robot name="line_sensor_ign" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ========== パラメータ ========== -->
+  <xacro:property name="BOARD_X" value="0.03"/>
+  <xacro:property name="BOARD_Z" value="0.01"/>   <!-- 地面から 10 mm -->
+  <xacro:property name="CAM_Z"   value="0.004"/>  <!-- 基板下面から 4 mm ↓ -->
+
+  <!-- ========== 基板 ========== -->
+  <link name="ae_board">
+    <visual>
+      <geometry><box size="0.122 0.022 0.01"/></geometry>
+      <material name="Green"><color rgba="0 1 0 1"/></material>
+    </visual>
+    <collision><geometry><box size="0.122 0.022 0.01"/></geometry></collision>
+    <inertial><mass value="0.015"/></inertial>
+  </link>
+
+  <joint name="fix" type="fixed">
+    <parent link="world"/>
+    <child  link="ae_board"/>
+    <origin xyz="${BOARD_X} 0 ${BOARD_Z}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ========== Ignition Camera ==========
+       *Gazebo Transport* トピックで image / camera_info を出す
+  -->
+  <gazebo>
+    <sensor name="line_cam" type="camera">
+      <pose>0 0 ${-CAM_Z}  1.5708 0 0</pose>      <!-- 下向き -->
+      <camera>
+        <image><width>8</width><height>1</height><format>L8</format></image>
+        <horizontal_fov>0.05</horizontal_fov>
+        <clip><near>0.0001</near><far>0.05</far></clip>
+      </camera>
+      <update_rate>500</update_rate>
+      <always_on>true</always_on>
+    </sensor>
+  </gazebo>
+
+</robot>
+

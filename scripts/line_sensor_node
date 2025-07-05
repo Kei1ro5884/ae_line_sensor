@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# lib/ae_line_sensor/line_sensor_node へのラッパー
+exec /usr/bin/env python3 -m ae_line_sensor.line_sensor_node "$@"
+

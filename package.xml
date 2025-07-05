@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>ae_line_sensor</name>
+  <version>0.1.0</version>
+  <description>AE-NJL5901AR-8CH line sensor (Gazebo + Python)</description>
+
+  <maintainer email="s23c1050@s.chibakoudai.jp">Keiichiro Kobayashi</maintainer>
+  <license>MIT</license>
+
+  <!-- 実行時依存 -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>gazebo_ros</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

@@ -1,54 +1,61 @@
 <?xml version="1.0"?>
-<robot name="line_sensor_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+<!-- 8-ch フォトリフレクタ (実体は 8×1 px カメラ) -->
+<robot name="ae_njl5901ar_8ch" xmlns:xacro="http://ros.org/wiki/xacro">
 
-  <xacro:macro name="ae_board_cam" params="parent:=base_link">
+  <!-- ==== 1) 基板 ==== -->
+  <link name="ae_board">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.01"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0"
+               iyy="1e-6" iyz="0" izz="1e-6"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.05 0.02 0.002"/></geometry>
+      <material name="DarkGreen">
+        <color rgba="0.0 0.3 0.0 1.0"/>
+      </material>
+    </visual>
+    <collision><geometry><box size="0.05 0.02 0.002"/></geometry></collision>
+  </link>
 
-    <link name="ae_board">
-      <visual>
-        <geometry><box size="0.122 0.022 0.01"/></geometry>
-        <material name="board_green"><color rgba="0 1 0 1"/></material>
-      </visual>
-      <collision>
-        <geometry><box size="0.122 0.022 0.01"/></geometry>
-      </collision>
-      <inertial>
-        <mass value="0.015"/>
-        <inertia ixx="1e-5" iyy="1e-5" izz="1e-5" ixy="0" ixz="0" iyz="0"/>
-      </inertial>
-    </link>
+  <!-- ==== 2) カメラリンク ==== -->
+  <link name="line_cam_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.001"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0"
+               iyy="1e-6" iyz="0" izz="1e-6"/>
+    </inertial>
+  </link>
 
-    <joint name="ae_board_fixed" type="fixed">
-      <parent link="${parent}"/>
-      <child  link="ae_board"/>
-      <origin xyz="0.03 0 0.2" rpy="0 0 0"/>
-    </joint>
+  <joint name="line_cam_joint" type="fixed">
+    <parent link="ae_board"/>
+    <child link="line_cam_link"/>
+    <!-- 基板下面に 1 mm だけ貼り付け，下向きに 90° 回転 -->
+    <origin xyz="0 0 -0.002" rpy="1.5708 0 0"/>
+  </joint>
 
-    <!-- ── 8×1 pixel Camera ── -->
-    <gazebo reference="ae_board">
-      <sensor name="line_cam" type="camera">
-        <pose>0 0 0  1.5708 0 0</pose>
-        <camera>
-          <image><width>8</width><height>1</height></image>
-          <format>L8</format>
-          <horizontal_fov>0.05</horizontal_fov>
-          <clip><near>0.0002</near><far>0.03</far></clip>
-        </camera>
-        <update_rate>500</update_rate>
-        <always_on>true</always_on>
+  <!-- ==== 3) Gazebo センサ ==== -->
+  <gazebo reference="line_cam_link">
+    <sensor name="line_cam" type="camera">
+      <always_on>true</always_on>
+      <update_rate>50.0</update_rate>
+      <camera>
+        <horizontal_fov>0.01</horizontal_fov>
+        <image><width>8</width><height>1</height><format>L8</format></image>
+        <clip><near>0.001</near><far>1.0</far></clip>
+      </camera>
 
-        <plugin name="ros_line_cam" filename="libgazebo_ros_camera.so">
-          <cameraName>line_cam</cameraName>
-          <imageTopicName>/line_cam/image_raw</imageTopicName>
-          <cameraInfoTopicName>/line_cam/camera_info</cameraInfoTopicName>
-          <frameName>ae_board</frameName>
-        </plugin>
-      </sensor>
-    </gazebo>
-
-  </xacro:macro>
-
-  <link name="base_link"/>
-  <xacro:ae_board_cam parent="base_link"/>
+      <plugin name="gazebo_ros_camera" filename="libgazebo_ros_camera.so">
+        <camera_name>line_cam</camera_name>
+        <image_topic_name>image_raw</image_topic_name>
+        <camera_info_topic_name>camera_info</camera_info_topic_name>
+        <frame_name>line_cam_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
 
 </robot>
 

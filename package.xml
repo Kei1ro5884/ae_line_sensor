@@ -2,18 +2,27 @@
 <package format="3">
   <name>ae_line_sensor</name>
   <version>0.1.0</version>
-  <description>AE-NJL5901AR-8CH line sensor (Gazebo + Python)</description>
+  <description>AE-NJL5901AR 8-channel line sensor simulated in Gazebo Classic.</description>
 
-  <maintainer email="s23c1050@s.chibakoudai.jp">Keiichiro Kobayashi</maintainer>
+  <maintainer email="s23c1050eb@s.chibakoudai.jp">Keiichiro Kobayashi</maintainer>
   <license>MIT</license>
 
-  <!-- 実行時依存 -->
+  <!-- build -->
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <build_depend>rclpy</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>cv_bridge</build_depend>
+  <build_depend>gazebo_ros</build_depend>
+  <build_depend>xacro</build_depend>
+
+  <!-- run -->
   <exec_depend>rclpy</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>cv_bridge</exec_depend>
   <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>xacro</exec_depend>
 
-  <export>
-    <build_type>ament_python</build_type>
-  </export>
+  <export><build_type>ament_python</build_type></export>
 </package>
+

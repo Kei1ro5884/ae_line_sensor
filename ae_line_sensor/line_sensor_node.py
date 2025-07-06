@@ -1,47 +1,69 @@
 #!/usr/bin/env python3
 """
-8×1-pixel カメラの輝度を 0/1 にして
-/ae_line/raw (std_msgs/UInt8MultiArray, 要素8) で配信
+line_sensor_node.py
+
+Gazebo で 8×1 px カメラ（topic: /line_cam/image_raw）から取得した
+モノクロ画像を、フレームごとに自動計算したしきい値で 0/1 の
+ビット列へ変換して `/ae_line/raw` (std_msgs/UInt8MultiArray) に公開する
+ROS 2 ノード。
+
+■ しきい値の計算
+    thresh = (min(pixels) + max(pixels)) // 2
+    bits   = (pixels < thresh) ? 1 : 0
+→ 環境光や床材質のムラに即時に適応する。
 """
 
-import numpy as np
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from std_msgs.msg import UInt8MultiArray
 from cv_bridge import CvBridge
+import numpy as np
 
-THRESH = 80        # 黒ラインより大きく、白床より小さく調整
 
 class LineSensorNode(Node):
-    def __init__(self):
-        super().__init__('ae_line_sensor')
-        self.bridge = CvBridge()
+    def __init__(self) -> None:
+        super().__init__('line_sensor_node')
 
-        # 8 ビット配列を配信
-        self.pub = self.create_publisher(UInt8MultiArray,
-                                         '/ae_line/raw', 10)
+        self._bridge = CvBridge()
 
-        self.create_subscription(Image,
-                                 '/line_cam/image_raw',
-                                 self.cb_image, 10)
+        # 出力: 8 bit の 0/1 配列
+        self._pub = self.create_publisher(
+            UInt8MultiArray, '/ae_line/raw', 10)
 
-    def cb_image(self, msg: Image):
-        # 1) 画像を 8×1 (mono8) へ
-        pixels = self.bridge.imgmsg_to_cv2(msg, 'mono8')[0, :]  # shape (1,8)
+        # 入力: Gazebo カメラ画像 (1×8, mono8)
+        self.create_subscription(
+            Image, '/line_cam/image_raw', self._on_image, 10)
 
-        # 2) 閾値判定 → 0/1 配列
-        binary = (pixels < THRESH).astype(np.uint8)             # 黒=1, 白=0
+        self.get_logger().info('ae_line_sensor node started')
 
-        # 3) 配信
-        self.pub.publish(UInt8MultiArray(data=binary.tolist()))
+    # ────────────────────────────────────────────────
+    # 画像 → ビット列
+    # ────────────────────────────────────────────────
+    def _on_image(self, msg: Image) -> None:
+        # Gazebo Image → NumPy uint8, shape = (8,)
+        pixels = self._bridge.imgmsg_to_cv2(msg, desired_encoding='mono8')[0]
 
-def main():
+        # フレームごとに自動しきい値
+        thresh = (int(pixels.min()) + int(pixels.max())) // 2
+        bits   = (pixels < thresh).astype(np.uint8)
+
+        # Publish
+        self._pub.publish(UInt8MultiArray(data=bits.tolist()))
+
+
+# ──────────────────────────────────────────────────
+def main() -> None:
     rclpy.init()
     node = LineSensorNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()
